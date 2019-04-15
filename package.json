@@ -5,13 +5,20 @@
   "dependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "2.1.8"
+    "react-router": "^5.0.0",
+    "react-router-dom": "^5.0.0",
+    "react-router-transition": "^1.3.0",
+    "react-scripts": "2.1.8",
+    "styled-jsx": "^3.2.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start-old": "react-scripts start",
+    "start": "rescripts start",
+    "build-old": "react-scripts build",
+    "build": "rescripts build",
+    "test-old": "react-scripts test",
+    "test": "rescripts test",
+    "eject-old": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -21,5 +28,13 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
+  ],
+  "devDependencies": {
+    "@rescripts/cli": "^0.0.10",
+    "@rescripts/rescript-env": "^0.0.10",
+    "node-sass": "^4.11.0"
+  },
+  "rescripts": [
+    "env"
   ]
 }
