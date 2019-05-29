@@ -1,19 +1,242 @@
+import vait from 'vait'
 import React, { Component } from 'react'
+
+import LoginInputFrame from 'layouts/LoginInputFrame'
+
+import { Login as LoginRequest, checkLoginStatus } from 'api/auth'
+
+const channelLightAnimateTiming = 1500
+const channelLightAnimateCount = 1
+const channelLightAnimateTimingTotal = channelLightAnimateTiming * channelLightAnimateCount
+
+const Login = function() {
+  const v = vait()
+  LoginRequest(...arguments).then(v.pass).catch(v.fail)
+  return v
+}
 
 export default class LoginBox extends Component {
   state = {
+    error: null,
+    logining: false,
+    disableInput: false
+  }
+
+  // loginV 得是由 vait 创建的 Promise 实例
+  startLoginEffect = loginV => {
+    this.setState({
+      disableInput: true,
+      logining: true
+    })
+
+    const callbackV = vait()
+
+    const checkLoginIsFinally = () => {
+      console.log('checkLoginIsFinally', loginV.__finally__)
+      if (loginV.__finally__) {
+        loginV.then(callbackV.pass)
+        loginV.catch(callbackV.fail)
+
+        return loginV.__finally__
+        // return true
+      }
+    }
+
+    const minAnimatePlayCount = 2
+    let animatePlayCount = 0
+    const isIteralToMinCount = () => {
+      return animatePlayCount >= minAnimatePlayCount
+    }
+    let animateV = null
+    const setAnimateV = () => {
+      animatePlayCount += 1
+      animateV = vait.timeout(channelLightAnimateTimingTotal, 'animateDone')
+      return animateV
+    }
+    setAnimateV()
+
+    const retryShuttleAnimate = () => {
+      this.setState({
+        logining: false
+      })
+
+      vait.nextTick().then(() => {
+        if (isIteralToMinCount() && checkLoginIsFinally()) {
+          // 检查光有没有穿梭足够的次数，有则检查登录请求的情况
+          return
+        }
+
+        this.setState({
+          logining: true
+        })
+
+        setAnimateV()
+        detectLoginState()
+      })
+    }
+
+    const detectLoginState = () => {
+      Promise.race([loginV, animateV]).then(async (vResult) => {
+        if (!isIteralToMinCount()) {
+          // 检查光有没有穿梭足够的次数，没有则继续重复穿梭
+          await animateV
+          return retryShuttleAnimate()
+        // } else if ((typeof vResult === 'boolean') && loginV.__finally__) {
+        } else if (loginV.__finally__) {
+          // 检查 loginV 是否有结果，有的话就等待动画播放完再做进一步操作
+          await animateV
+          return checkLoginIsFinally() // 检查登录请求的情况
+        } else if (vResult === 'animateDone') {
+          // 光已穿梭完
+          retryShuttleAnimate()
+        }
+      })
+    }
+
+    detectLoginState()
+
+    return callbackV
+  }
+
+  detectPassword = async (password) => {
+    const loginV = Login(password)
+    try {
+      const token = await this.startLoginEffect(loginV)
+      if (token) {
+        this.props.onLoginSuccess && this.props.onLoginSuccess(token)
+      } else {
+        console.warn('invliad password')
+        this.setState({
+          error: Error('密码错误'),
+          logining: false,
+          disableInput: false
+        })
+      }
+    } catch (error) {
+      console.error('login fail', error)
+      this.setState({
+        error
+      })
+    }
+  }
+
+  // 自动登录
+  async autoLogin() {
+    const { state, props: { store } } = this
+    if (state.logining) {
+      return
+    }
+
+    if (!store.token) {
+      // 没有 token 的话退出
+      return
+    }
+
+    try {
+      const checkLoginStatusV = vait()
+      checkLoginStatus()
+        .then(checkLoginStatusV.pass)
+        .catch(checkLoginStatusV.fail)
+
+      const loginStatus = await this.startLoginEffect(checkLoginStatusV)
+
+      if (loginStatus) {
+        // token 还可用
+        this.props.onLoginSuccess && this.props.onLoginSuccess(store.token)
+      } else {
+        // token 不可用
+        store.token = null
+        this.setState({
+          logining: false,
+          disableInput: false
+        })
+      }
+    } catch (error) {
+      console.error('detectLogin fail', error)
+      this.setState({
+        error
+      })
+    }
+  }
+
+  componentDidMount() {
+    if (this.props.transitionState === 'entered') {
+      this.autoLogin()
+    }
   }
 
   render() {
-    return <div className={ `box ${this.props.transitionState}` }>
+    return <div className={ `box ${this.props.transitionState} ${ this.state.error ? 'error' : '' }` }>
       <div className="up-side-wrapper">
-        <div className="up-side">up-side</div>
+        <div className="up-side">
+          <div className={ `login-frame` }>
+            <LoginInputFrame
+              isFailure={ this.state.error }
+              disabled={ this.state.disableInput }
+              handleInputChange={ () => {
+                this.setState({
+                  error: null
+                })
+              } }
+              handlePasswordDetect={ this.detectPassword }
+            />
+          </div>
+        </div>
       </div>
+
       <div className="down-side-wrapper">
-        <div className="down-side">down-side</div>
+        <div className="down-side"></div>
+
+        <div className={ `light-channel ${this.state.logining ? 'logining' : ''}` }>
+          <div className="light"></div>
+        </div>
       </div>
 
       <style jsx>{`
+        .login-frame {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+        }
+
+        .exiting .light-channel,
+        .exited .light-channel {
+          display: none;
+        }
+
+        .light-channel {
+          position: absolute;
+          left: 0;
+          width: 100%;
+          height: 8px;
+          top: -4px;
+          /* top: calc(50%); */
+        }
+
+        @keyframes shuttle {
+          from {
+            margin-left: -300px;
+          }
+          to {
+            margin-left: 100%;
+          }
+        }
+
+        .light-channel.logining .light {
+          animation-name: shuttle;
+          animation-duration: ${channelLightAnimateTiming}ms;
+          animation-iteration-count: ${channelLightAnimateCount};
+        }
+
+        .light-channel .light {
+          width: 300px;
+          height: 100%;
+          margin-left: -300px;
+          background: linear-gradient(to right, #acacb8, white, #acacb8);
+        }
+
         .box {
           transition: color 618ms, background-color 618ms;
           position: fixed;
@@ -23,6 +246,11 @@ export default class LoginBox extends Component {
           height: 100vw;
 
           z-index: 1;
+        }
+
+        .box.error .up-side,
+        .box.error .down-side {
+          border-color: rgb(241, 56, 56);
         }
 
         .up-side-wrapper, .down-side-wrapper {
@@ -45,7 +273,7 @@ export default class LoginBox extends Component {
           from {
             transform: rotateX(-90deg);
           }
-            to {
+          to {
             transform: rotateX(0deg);
           }
         }
@@ -54,7 +282,7 @@ export default class LoginBox extends Component {
           from {
             transform: rotateX(0deg);
           }
-            to {
+          to {
             transform: rotateX(-90deg);
           }
         }
@@ -70,6 +298,7 @@ export default class LoginBox extends Component {
 
         .entering .up-side {
           animation-name: up_side_enter;
+          transform: rotateX(-90deg);
         }
 
         .exited .up-side {
@@ -78,13 +307,14 @@ export default class LoginBox extends Component {
 
         .exiting .up-side {
           animation-name: up_side_exit;
+          transform: rotateX(0deg);
+          animation-delay: 200ms;
         }
 
         @keyframes down_side_enter {
           from {
             transform: rotateX(90deg);
           }
-
           to {
             transform: rotateX(0deg);
           }
@@ -94,7 +324,7 @@ export default class LoginBox extends Component {
           from {
             transform: rotateX(0deg);
           }
-            to {
+          to {
             transform: rotateX(90deg);
           }
         }
@@ -110,6 +340,7 @@ export default class LoginBox extends Component {
 
         .entering .down-side {
           animation-name: down_side_enter;
+          transform: rotateX(90deg);
         }
 
         .exited .down-side {
@@ -117,13 +348,19 @@ export default class LoginBox extends Component {
         }
 
         .exiting .down-side {
+          animation-delay: 200ms;
           animation-name: down_side_exit;
+          transform: rotateX(0deg);
         }
 
         .up-side, .down-side {
           animation-fill-mode: forwards;
           animation-timing-function: ease-out;
           animation-duration: ${ this.props.transitionTiming }ms;
+
+          animation-timing-function: cubic-bezier(.59,-0.45,.65,.98);
+
+          transition: border-color 500ms;
 
           position: absolute;
           left: -4px;

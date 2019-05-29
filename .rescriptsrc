@@ -1,3 +1,11 @@
 module.exports = [
-  ['use-babel-config', '.babelrc']
+  [
+    'use-babel-config',
+    {
+      "presets": ["react-app", "mobx"],
+      "plugins": [
+        "styled-jsx/babel"
+      ]
+    }
+  ]
 ]

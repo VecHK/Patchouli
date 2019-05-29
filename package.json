@@ -1,8 +1,12 @@
 {
-  "name": "pache-admin",
+  "name": "patchouli",
   "version": "0.1.0",
-  "private": true,
   "dependencies": {
+    "axios": "^0.18.0",
+    "babel-preset-mobx": "^2.0.0",
+    "blueimp-md5": "^2.10.0",
+    "mobx": "^5.9.4",
+    "mobx-react": "^5.4.4",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router": "^5.0.0",
@@ -10,7 +14,8 @@
     "react-router-transition": "^1.3.0",
     "react-scripts": "2.1.8",
     "react-transition-group": "^4.0.1",
-    "styled-jsx": "^3.2.1"
+    "styled-jsx": "^3.2.1",
+    "vait": "^0.1.1"
   },
   "scripts": {
     "start-old": "react-scripts start",
@@ -33,7 +38,8 @@
   "devDependencies": {
     "@rescripts/cli": "^0.0.10",
     "@rescripts/rescript-env": "^0.0.10",
-    "node-sass": "^4.11.0"
+    "node-sass": "^4.11.0",
+    "vconsole": "^3.3.0"
   },
   "rescripts": [
     "env"
