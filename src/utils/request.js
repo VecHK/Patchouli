@@ -55,6 +55,10 @@ request.interceptors.response.use(
   },
 
   axiosErr => {
+    if (!axiosErr.response) {
+      return Promise.reject(axiosErr)
+    }
+
     const { response } = axiosErr
     const { data, status } = response
 

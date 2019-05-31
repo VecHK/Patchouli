@@ -1,7 +1,9 @@
 import vait from 'vait'
 import React, { Component } from 'react'
+import { TransitionGroup, Transition } from "react-transition-group"
 
-import LoginInputFrame from 'layouts/LoginInputFrame'
+import LoginInputFrame from './LoginInputFrame'
+import FatalError from './FatalError'
 
 import { Login as LoginRequest, checkLoginStatus } from 'api/auth'
 
@@ -76,7 +78,10 @@ export default class LoginBox extends Component {
     }
 
     const detectLoginState = () => {
-      Promise.race([loginV, animateV]).then(async (vResult) => {
+      Promise.race([loginV, animateV]).catch(err => {
+        // loginV 抛出的错误
+        return Object.assign(err, { fatal: true })
+      }).then(async (vResult) => {
         if (!isIteralToMinCount()) {
           // 检查光有没有穿梭足够的次数，没有则继续重复穿梭
           await animateV
@@ -101,7 +106,12 @@ export default class LoginBox extends Component {
   detectPassword = async (password) => {
     const loginV = Login(password)
     try {
-      const token = await this.startLoginEffect(loginV)
+      console.log('startLoginEffect')
+      const resultV = this.startLoginEffect(loginV)
+      resultV.catch(err => {
+        console.error('errrrrrrr', err)
+      })
+      const token = await resultV
       if (token) {
         this.props.onLoginSuccess && this.props.onLoginSuccess(token)
       } else {
@@ -115,7 +125,9 @@ export default class LoginBox extends Component {
     } catch (error) {
       console.error('login fail', error)
       this.setState({
-        error
+        error,
+        logining: false,
+        disableInput: false
       })
     }
   }
@@ -154,7 +166,9 @@ export default class LoginBox extends Component {
     } catch (error) {
       console.error('detectLogin fail', error)
       this.setState({
-        error
+        error,
+        logining: false,
+        disableInput: false
       })
     }
   }
@@ -166,13 +180,15 @@ export default class LoginBox extends Component {
   }
 
   render() {
-    return <div className={ `box ${this.props.transitionState} ${ this.state.error ? 'error' : '' }` }>
+    const { error, disableInput } = this.state
+
+    return <div className={ `box ${this.props.transitionState} ${ error ? 'error' : '' }` }>
       <div className="up-side-wrapper">
         <div className="up-side">
           <div className={ `login-frame` }>
             <LoginInputFrame
-              isFailure={ this.state.error }
-              disabled={ this.state.disableInput }
+              isFailure={ error }
+              disabled={ disableInput }
               handleInputChange={ () => {
                 this.setState({
                   error: null
@@ -185,7 +201,15 @@ export default class LoginBox extends Component {
       </div>
 
       <div className="down-side-wrapper">
-        <div className="down-side"></div>
+        <div className="down-side">
+          <TransitionGroup className="transition-group">
+            <Transition key={ error ? error.message: 'null' } timeout={ 500 }>
+              {state => (
+                (error && error.fatal) && <FatalError transitionTiming={ 500 } transitionState={ state } error={ error } />
+              )}
+            </Transition>
+          </TransitionGroup>
+        </div>
 
         <div className={ `light-channel ${this.state.logining ? 'logining' : ''}` }>
           <div className="light"></div>
@@ -351,6 +375,13 @@ export default class LoginBox extends Component {
           animation-delay: 200ms;
           animation-name: down_side_exit;
           transform: rotateX(0deg);
+        }
+
+        .down-side :global(.transition-group){
+          height: 100%;
+          width: 100%;
+
+          transform: translateZ(0);
         }
 
         .up-side, .down-side {
