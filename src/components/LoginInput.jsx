@@ -58,7 +58,11 @@ export default class LoginInput extends Component {
 
         @keyframes shake {
           10%, 90% {
-            transform: translate3d(-2px, 0, 0);
+            transform: translate3d(-6px, 0, 0);
+          }
+
+          20%, 80% {
+            transform: translate3d(4px, 0, 0);
           }
 
           20%, 80% {
@@ -75,9 +79,9 @@ export default class LoginInput extends Component {
         }
 
         .wrapper.failure {
-          animation: shake 1.2s;
+          animation: shake 0.8s;
           animation-fill-mode: both;
-          animation-timing-function: cubic-bezier(.23,.34,.26,1);
+          animation-timing-function: cubic-bezier(0,.44,.26,1);
           /* transform: translate3d(0, 0, 0); */
           backface-visibility: hidden;
           perspective: 1000px;
