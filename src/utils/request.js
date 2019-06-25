@@ -1,8 +1,9 @@
 import axios from 'axios'
 import store from 'store'
-window.store = store
+
 const config = {
-  baseURL: 'http://192.168.43.41:3382/api'
+  baseURL: 'http://192.168.43.41:3382/api',
+  timeout: 5000
 }
 
 const request = axios.create(config)
