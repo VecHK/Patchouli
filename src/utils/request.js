@@ -9,15 +9,15 @@ const config = {
 const request = axios.create(config)
 
 request.interceptors.request.use(
-  config => {
-    if (!config.noToken) {
+  requestOption => {
+    if (!requestOption.noToken) {
       const { token } = store
       if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`
+        requestOption.headers['Authorization'] = `Bearer ${token}`
       }
     }
 
-    return config
+    return requestOption
   },
 
   err => {
