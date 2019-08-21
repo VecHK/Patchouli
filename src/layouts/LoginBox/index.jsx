@@ -304,10 +304,10 @@ export default class LoginBox extends Component {
 
         @keyframes up_side_exit {
           from {
-            transform: rotateX(0deg);
+            transform: rotateX(0deg) translateY(0px);
           }
           to {
-            transform: rotateX(-90deg);
+            transform: rotateX(-90deg) translateY(-10px);
           }
         }
 
@@ -346,10 +346,10 @@ export default class LoginBox extends Component {
 
         @keyframes down_side_exit {
           from {
-            transform: rotateX(0deg);
+            transform: rotateX(0deg) translateY(0px);
           }
           to {
-            transform: rotateX(90deg);
+            transform: rotateX(90deg) translateY(10px);
           }
         }
 
