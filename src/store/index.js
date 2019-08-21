@@ -1,10 +1,11 @@
 import TokenStore from './token'
 import LoginStore from './login'
+import ArticleManagerStore from './article-manager'
 
 const createClassChain = chain => {
-  const createStoreClass = chain.shift()
-  if (createStoreClass) {
-    return createStoreClass(createClassChain(chain))
+  const createClass = chain.shift()
+  if (createClass) {
+    return createClass(createClassChain(chain))
   } else {
     return class ChainReached {}
   }
@@ -12,7 +13,8 @@ const createClassChain = chain => {
 
 const RootStore = createClassChain([
   TokenStore,
-  LoginStore
+  LoginStore,
+  ArticleManagerStore
 ])
 
 export default new RootStore()
