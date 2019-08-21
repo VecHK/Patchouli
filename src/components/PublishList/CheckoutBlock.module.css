@@ -1,0 +1,5 @@
+@value width: 100px;
+
+.ContainerWidth {
+  width: width;
+}

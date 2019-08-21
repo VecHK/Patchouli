@@ -1,16 +1,31 @@
 import React, { Component } from 'react'
+import { observer } from 'mobx-react'
+import store from 'store'
 
-export default class ArticleManager extends Component {
+import { fetchPublishes } from 'api/publish'
+
+import PublishList from 'components/PublishList'
+
+@observer
+class ArticleManager extends Component {
   state = {
+  }
+
+  handleClickLogout = () => {
+    store.token = null
+    store.isLogin = false
+  }
+
+  componentDidMount() {
+    fetchPublishes(1).then(res => {
+      store.publishList = res.list
+    })
   }
 
   render() {
     return <div className={ `article-manager-wrapper ${ this.props.transitionState }` }>
       <div className="article-manager">
-        <div>
-          <div className="title">Patchouli</div>
-          <div className="summary">next Generation Blog Manager</div>
-        </div>
+        <PublishList list={ this.props.store.publishList }></PublishList>
       </div>
 
       <div className="black-mask"></div>
@@ -24,16 +39,10 @@ export default class ArticleManager extends Component {
         }
 
         .article-manager {
-          display: flex;
-          align-items: center;
-          align-content: center;
-          justify-content: center;
+          width: 100%;
+          height: 100%;
 
-          width: 100vw;
-          height: 100vh;
-
-          text-align: center;
-          color: #3a3a45;
+          overflow-y: scroll;
 
           animation-fill-mode: forwards;
           animation-timing-function: ease-out;
@@ -41,8 +50,6 @@ export default class ArticleManager extends Component {
 
           background-color: white;
           box-shadow: 0px 10px 20px #CCC;
-
-          /* box-shadow: 0 0 2px #999; */
         }
 
         .black-mask {
@@ -95,21 +102,6 @@ export default class ArticleManager extends Component {
           display: none;
         }
 
-        .title {
-          font-size: 96px;
-          font-family: Botera TFE;
-
-          -webkit-text-stroke: 0.5px #CCC;
-          color: #EEE;
-          text-shadow: 0px -1px 0.5px #AAA;
-        }
-
-        .summary {
-          font-size: 20px;
-          color: slategray;
-          font-family: fantasy;
-        }
-
         @keyframes fadeIn {
           from {
             transform: scale(0.8);
@@ -156,3 +148,5 @@ export default class ArticleManager extends Component {
     </div>
   }
 }
+
+export default ArticleManager
