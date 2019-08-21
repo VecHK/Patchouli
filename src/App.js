@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+
 import { TransitionGroup, Transition } from "react-transition-group"
 import {
   HashRouter as Router,
@@ -26,7 +27,8 @@ function RedirectToLogin(callback) {
   }} />
 }
 
-@observer class App extends Component {
+@observer
+class App extends Component {
   constructor() {
     super()
 
@@ -73,12 +75,13 @@ function RedirectToLogin(callback) {
                     {state => (
                       <Switch location={ location }>
                         <Route
-                          path="/home"
+                          path="/"
                           exact
                           render={route => (
                             <ArticleManager
                               isLogin={ store.isLogin }
                               route={ route }
+                              store={ store }
                               transitionState={ state }
                               transitionTiming={ LoginInArticleManagerTiming }
                             />
