@@ -4,11 +4,15 @@ import store from 'store'
 
 import { fetchPublishes } from 'api/publish'
 
+import Loading from 'components/Loading'
 import PublishList from 'components/PublishList'
 
 @observer
 class ArticleManager extends Component {
   state = {
+    firstLoading: true,
+    firstLoadingError: null,
+    page: 1
   }
 
   handleClickLogout = () => {
@@ -17,15 +21,80 @@ class ArticleManager extends Component {
   }
 
   componentDidMount() {
-    fetchPublishes(1).then(res => {
-      store.publishList = res.list
-    })
+    this.startFirstLoading()
+  }
+
+  startFirstLoading() {
+    this.fetch(true)
+  }
+
+  async fetch(isRefresh) {
+    const { page } = this.state
+
+    try {
+      const res = await fetchPublishes(page)
+      if (isRefresh) {
+        store.publishList = res.list
+      } else {
+        store.publishList = [store.publishList, ...res.list]
+      }
+
+      this.setState({ firstLoading: false })
+    } catch (err) {
+      console.error('firstLoadingError', err)
+      this.setState({
+        firstLoadingError: err
+      })
+    }
   }
 
   render() {
+    const { firstLoading, firstLoadingError } = this.state
+
+    const flexCenterStyle = {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      alignContent: 'center'
+    }
+
     return <div className={ `article-manager-wrapper ${ this.props.transitionState }` }>
       <div className="article-manager">
-        <PublishList list={ this.props.store.publishList }></PublishList>
+        {
+          do {
+            if (!firstLoading) {
+              return <PublishList list={ this.props.store.publishList }></PublishList>
+            }
+
+            return (
+              <div style={{
+                width: '100%',
+                height: '100%',
+                ...flexCenterStyle
+              }}>
+                {
+                  do {
+                    if (firstLoadingError) {
+                      return <div className="first-loading-error">
+                        <div>加载失败: { firstLoadingError.message }</div>
+                        <div style={{ ...flexCenterStyle }}>
+                          <button onClick={
+                            e => {
+                              e.preventDefault()
+                              this.startFirstLoading()
+                            }
+                          }>重试</button>
+                        </div>
+                      </div>
+                    } else {
+                      return <Loading />
+                    }
+                  }
+                }
+              </div>
+            )
+          }
+        }
       </div>
 
       <div className="black-mask"></div>
