@@ -13,8 +13,8 @@ import PublishList from 'components/PublishList'
 @observer
 class ArticleManager extends Component {
   state = {
-    entered: false,
-    firstLoading: true,
+    firstLoaded: false,
+    firstLoading: false,
     firstLoadingError: null,
     page: 1
   }
@@ -32,7 +32,7 @@ class ArticleManager extends Component {
         await this.fetch(true)
       }
     } finally {
-      this.setState({ firstLoading: false })
+      this.setState({ firstLoading: false, firstLoaded: true })
     }
   }
 
@@ -68,12 +68,15 @@ class ArticleManager extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { enterd } = this.state
-    const { transitionState } = nextProps
-    if (enterd || (transitionState === 'entered')) {
+  componentDidUpdate(props, state) {
+    const { transitionState } = props
+    const { enterd } = this
+
+    if (!enterd && (transitionState === 'entered')) {
+      this.enterd = true
+
       this.setState({
-        entered: true
+        firstLoading: true
       })
 
       this.startFirstLoading()
@@ -81,7 +84,7 @@ class ArticleManager extends Component {
   }
 
   render() {
-    const { firstLoading, firstLoadingError, entered } = this.state
+    const { firstLoaded, firstLoading, firstLoadingError } = this.state
 
     const flexCenterStyle = {
       display: 'flex',
@@ -94,7 +97,7 @@ class ArticleManager extends Component {
       <div className="article-manager">
         {
           do {
-            if (!firstLoading) {
+            if (firstLoaded) {
               return <div>
                 <CategoryHeader categories={ store.categories } />
                 <PublishList list={ this.props.store.publishList }></PublishList>
@@ -125,7 +128,7 @@ class ArticleManager extends Component {
                       return <div style={{ textAlign: 'center' }}>
                         <TitleLogo />
                         <div style={{ height: '1em' }}></div>
-                        <div style={{ opacity: Number(entered) }}><Loading /></div>
+                        <div style={{ opacity: Number(firstLoading) }}><Loading /></div>
                       </div>
                     }
                   }
