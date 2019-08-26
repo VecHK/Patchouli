@@ -17,4 +17,6 @@ const RootStore = createClassChain([
   ArticleManagerStore
 ])
 
-export default new RootStore()
+const store = new RootStore()
+
+export default store

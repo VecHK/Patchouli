@@ -2,14 +2,18 @@ import React, { Component } from 'react'
 import { observer } from 'mobx-react'
 import store from 'store'
 
+import { getCategories } from 'api/category'
 import { fetchPublishes } from 'api/publish'
 
+import TitleLogo from 'components/TitleLogo'
 import Loading from 'components/Loading'
+import CategoryHeader from 'components/CategoryHeader'
 import PublishList from 'components/PublishList'
 
 @observer
 class ArticleManager extends Component {
   state = {
+    entered: false,
     firstLoading: true,
     firstLoadingError: null,
     page: 1
@@ -20,12 +24,28 @@ class ArticleManager extends Component {
     store.isLogin = false
   }
 
-  componentDidMount() {
-    this.startFirstLoading()
+  async startFirstLoading() {
+    this.setState({ firstLoading: true })
+
+    try {
+      if (await this.refreshCategories()) {
+        await this.fetch(true)
+      }
+    } finally {
+      this.setState({ firstLoading: false })
+    }
   }
 
-  startFirstLoading() {
-    this.fetch(true)
+  async refreshCategories() {
+    try {
+      store.categories = await getCategories()
+      return store.categories
+    } catch (err) {
+      console.error('firstLoadingError in refreshCategories', err)
+      this.setState({
+        firstLoadingError: err
+      })
+    }
   }
 
   async fetch(isRefresh) {
@@ -39,17 +59,29 @@ class ArticleManager extends Component {
         store.publishList = [store.publishList, ...res.list]
       }
 
-      this.setState({ firstLoading: false })
+      return store.publishList
     } catch (err) {
-      console.error('firstLoadingError', err)
+      console.error('firstLoadingError in refreshCategories', err)
       this.setState({
         firstLoadingError: err
       })
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { enterd } = this.state
+    const { transitionState } = nextProps
+    if (enterd || (transitionState === 'entered')) {
+      this.setState({
+        entered: true
+      })
+
+      this.startFirstLoading()
+    }
+  }
+
   render() {
-    const { firstLoading, firstLoadingError } = this.state
+    const { firstLoading, firstLoadingError, entered } = this.state
 
     const flexCenterStyle = {
       display: 'flex',
@@ -63,7 +95,10 @@ class ArticleManager extends Component {
         {
           do {
             if (!firstLoading) {
-              return <PublishList list={ this.props.store.publishList }></PublishList>
+              return <div>
+                <CategoryHeader categories={ store.categories } />
+                <PublishList list={ this.props.store.publishList }></PublishList>
+              </div>
             }
 
             return (
@@ -87,7 +122,11 @@ class ArticleManager extends Component {
                         </div>
                       </div>
                     } else {
-                      return <Loading />
+                      return <div style={{ textAlign: 'center' }}>
+                        <TitleLogo />
+                        <div style={{ height: '1em' }}></div>
+                        <div style={{ opacity: Number(entered) }}><Loading /></div>
+                      </div>
                     }
                   }
                 }
