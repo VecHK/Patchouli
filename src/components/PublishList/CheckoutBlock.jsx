@@ -3,9 +3,24 @@ import React from 'react'
 import style from './CheckoutBlock.module.css'
 
 export default class CheckoutBlock extends React.Component {
+  getBoundingClientRect() {
+    return this.rootRef.current ? this.rootRef.current.getBoundingClientRect() : {}
+  }
+
+  constructor(props) {
+    super(props)
+
+    this.rootRef = React.createRef()
+  }
+
+  componentDidMount() {
+    const { onGetClientRect } = this.props
+    onGetClientRect && onGetClientRect(this.getBoundingClientRect())
+  }
+
   render() {
     return (
-      <div className="checkout-block">
+      <div ref={ this.rootRef } className="checkout-block">
         <div>check</div>
 
         <style jsx>{`

@@ -8,27 +8,44 @@ export default class PublishList extends React.Component {
   }
 
   state = {
-    openSide: false,
+    activeIndex: -1,
     pageY: null
   }
 
-  handleMouseMove = (e) => {
-    if (e.pageX > 100) {
-      this.setState({
-        openSide: false
-      })
+  constructor(props) {
+    super(props)
 
-      return
+    this.itemRefs = []
+  }
+
+  handleMouseMove = (e) => {
+    let activeIndex = -1
+
+    const { pageX, pageY } = e
+
+    const currentIndex = this.itemRefs.findIndex(ref => {
+      const { y, height } = ref.clientRect
+
+      return (pageY >= y) && pageY < (y + height)
+    })
+
+    if (currentIndex !== -1) {
+      const ref = this.itemRefs[currentIndex]
+
+      if (pageX <= ref.state.checkoutBlockWidth) {
+        activeIndex = currentIndex
+      }
     }
 
     this.setState({
-      openSide: true,
-      pageY: e.pageY
+      activeIndex,
+      pageY
     })
   }
 
   render() {
     const { list } = this.props
+    const { activeIndex } = this.state
 
     return (
       <div
@@ -39,9 +56,28 @@ export default class PublishList extends React.Component {
           list.map((pub, index) => {
             return <PublishItem
               key={ pub.id }
+              ref={ref => {
+                this.itemRefs[index] = ref
+              }}
               publish={ pub }
-              openSide={ this.state.openSide }
-              pageY={ this.state.pageY }
+              openSide={ activeIndex === index }
+              onActive={() => {
+                this.setState({
+                  activeIndex: index
+                })
+              }}
+              onClearActive={() => {
+                this.setState({
+                  activeIndex: -1
+                })
+              }}
+              onTouchStart={() => {
+                if (activeIndex !== index) {
+                  this.setState({
+                    activeIndex: -1
+                  })
+                }
+              }}
             />
           })
         }

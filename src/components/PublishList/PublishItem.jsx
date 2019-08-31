@@ -9,16 +9,22 @@ function formatTime(jsonDate) {
 }
 
 export default class PublishItem extends React.Component {
-  componentDidMount() {
-    console.warn('componentDidMount', this.rootRef)
-  }
-
-  componentWillUnmount() {
-
+  state = {
+    startX: null,
+    startY: null,
+    currentX: null,
+    currentY: null,
+    isDrag: false,
+    isHorizonalGesture: undefined,
+    checkoutBlockWidth: 0
   }
 
   getBoundingClientRect() {
     return this.rootRef.current ? this.rootRef.current.getBoundingClientRect() : {}
+  }
+
+  componentDidMount() {
+    this.clientRect = this.getBoundingClientRect()
   }
 
   constructor(props) {
@@ -27,25 +33,162 @@ export default class PublishItem extends React.Component {
     this.rootRef = React.createRef()
   }
 
-  render() {
-    const { publish:pub, openSide, pageY } = this.props
+  getTouch(e) {
+    const { touches } = e
+    if (touches.length !== 1) {
+      return null
+    }
 
-    const { y, height } = this.getBoundingClientRect()
+    const [ touch ] = touches
+
+    const { clientX: x, clientY: y } = touch
+
+    return { x, y }
+  }
+
+  getTouchDiff(state = this.state) {
+    const { currentX, currentY, startX, startY } = state
+
+    return {
+      x: currentX - startX,
+      y: currentY - startY
+    }
+  }
+
+  onTouchStart = e => {
+    const { openSide, onTouchStart } = this.props
+    if (openSide) {
+      return
+    }
+
+    onTouchStart && onTouchStart()
+
+    const touch = this.getTouch(e)
+    if (!touch) {
+      return
+    }
+
+    e.preventDefault()
+
+    const { x, y } = touch
+
+    this.setState({
+      isDrag: true,
+      startX: x,
+      startY: y,
+      currentX: x,
+      currentY: y
+    })
+  }
+
+  onTouchMove = e => {
+    const {
+      isDrag,
+      startX, startY
+    } = this.state
+
+    if (!isDrag) {
+      return
+    }
+
+    if ((this.state.isHorizonalGesture !== undefined) && !this.state.isHorizonalGesture) {
+      return
+    }
+
+    const { x: currentX, y: currentY } = this.getTouch(e)
+
+    let { isHorizonalGesture } = this.state
+
+    if (isHorizonalGesture === undefined) {
+      const diffX = currentX - startX
+      const diffY = currentY - startY
+      isHorizonalGesture = Math.abs(diffX) > Math.abs(diffY)
+
+      // 若不是横向滑动则退出
+      if (!isHorizonalGesture) {
+        return this.setState({ isHorizonalGesture })
+      }
+    }
+
+    e.preventDefault()
+
+    this.setState({
+      isDrag: true,
+      isHorizonalGesture,
+      currentX,
+      currentY
+    })
+  }
+
+  touchTerminal = () => {
+    const { onActive, onClearActive } = this.props
+    const { x: diffX, y: diffY } = this.getTouchDiff()
+
+    if (!diffX && !diffY) {
+      onClearActive && onClearActive()
+    } else {
+      const { checkoutBlockWidth } = this.state
+
+      if (diffX >= checkoutBlockWidth) {
+        onActive && onActive()
+      }
+    }
+
+    this.setState({
+      isDrag: false,
+      isHorizonalGesture: undefined
+    })
+  }
+
+  onTouchEnd = () => {
+    this.touchTerminal()
+  }
+
+  onTouchCancel = () => {
+    console.log('onTouchCancel')
+    this.touchTerminal()
+  }
+
+  render() {
+    const { isDrag, checkoutBlockWidth } = this.state
+    const { publish:pub, openSide } = this.props
 
     let high = ''
 
     if (openSide) {
-      if ((pageY >= y) && pageY < (y + height)) {
-        high = 'open'
-      }
+      high = 'open'
     }
 
+    const { x: diffX } = this.getTouchDiff()
+
+    const rangePercent = diffX / checkoutBlockWidth
+
     return <li
-      className={`publish-item-wrapper ${high}`}
-      ref={this.rootRef}
+      ref={ this.rootRef }
+      onTouchStart={ this.onTouchStart }
+      onTouchMove={ this.onTouchMove }
+      onTouchEnd={ this.onTouchEnd }
+      onTouchCancel={ this.onTouchCancel }
+      className={`publish-item-wrapper ${high} ${isDrag ? 'is-touch' : ''}`}
+      style={(() => {
+        if (!isDrag) {
+          return {}
+        }
+        return { borderColor: `rgba(208, 208, 208, ${rangePercent})` }
+      })()}
     >
-      <div className="publish-item-slider">
-        <div className="publish-item" style={{ 'borderColor': pub.fusion_color }}>
+      <div
+        className="publish-item-slider"
+        style={{
+          transform: do {
+            if (!isDrag) {
+              return ''
+            }
+            return `translateX(${diffX}px)`
+          }
+        }}
+      >
+        <div className="publish-item" style={{ 'borderColor': pub.fusion_color }} >
           <div className="title">
             <span>{pub.title}</span>
           </div>
@@ -61,15 +204,25 @@ export default class PublishItem extends React.Component {
           <time className="time">{formatTime(pub.date)}</time>
         </div>
 
-        <CheckoutBlock />
+        <CheckoutBlock
+          onGetClientRect={rect => {
+            this.setState({
+              checkoutBlockWidth: rect.width
+            })
+          }}
+        />
       </div>
 
       <style jsx>{`
+        .publish-item-wrapper:not(.is-touch) {
+          transition: border-color 382ms;
+        }
+
         .publish-item-wrapper {
           box-sizing: border-box;
-          border-top: solid 1px transparent;
-          border-bottom: solid 1px transparent;
-          transition: border-color 382ms;
+          border-top: solid 1px white;
+          border-bottom: solid 1px white;
+          background-color: rgb(232,232,232);
         }
 
         .publish-item-wrapper.open {
@@ -80,6 +233,9 @@ export default class PublishItem extends React.Component {
           position: relative;
 
           transform: translateX(0px);
+        }
+
+        .publish-item-wrapper:not(.is-touch) .publish-item-slider {
           transition: transform 382ms;
         }
 
@@ -94,6 +250,7 @@ export default class PublishItem extends React.Component {
 
           border-left: solid 5px;
           padding-right: 5px;
+          background-color: white;
         }
 
         .publish-item.open {
