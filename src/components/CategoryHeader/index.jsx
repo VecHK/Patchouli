@@ -1,62 +1,6 @@
 import React from 'react'
 
-function CategoryItem(props) {
-  const {
-    title,
-    highlight,
-    href = '',
-    onClick = e => {
-      e.preventDefault()
-    }
-  } = props
-
-  return <a
-    className={`category-item ${highlight ? 'highlight' : ''}`}
-    href={href}
-    onClick={onClick}
-  >
-    { title }
-    <style jsx>{`
-      .category-item {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        align-content: center;
-
-        margin: 0em .382em 0em;
-        padding: 0.1em .618em;
-        min-height: 1.5em;
-        line-height: 1.5em;
-
-        font-size: 16px;
-        text-decoration: none;
-
-        font-family: Arial, "Noto Sans CJK SC", "Source Han Sans", "Source Han Sans CN", "Helvetica Neue", Helvetica, "Han Heiti", "微软雅黑", "黑体", sans-serif;
-
-        /* font-weight: 300; */
-        background: transparent;
-        color: grey;
-        border-bottom-left-radius: 4px;
-        border-bottom-right-radius: 4px;
-      }
-
-      .category-item.highlight {
-        z-index: 10;
-        /* padding: 0 .618em;
-        padding-top: .1em;
-        padding-bottom: .1em;
-        margin: 0em calc(.618em / 2) 0em; */
-
-        background: #3a3a45;
-        color: azure;
-        box-shadow: 0px 0px 1px #3a3a45;
-
-        font-weight: bolder;
-        transition: box-shadow 0.618s;
-      }
-    `}</style>
-  </a>
-}
+import CategoryItem from './CategoryItem'
 
 export default class CategoriesHeader extends React.Component {
   render() {
