@@ -68,8 +68,6 @@ export default class PublishItem extends React.Component {
       return
     }
 
-    e.preventDefault()
-
     const { x, y } = touch
 
     this.setState({
