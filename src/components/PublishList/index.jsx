@@ -1,15 +1,14 @@
 import React from 'react'
 
+import Context from '../../layouts/ArticleManager/context'
+
 import PublishItem from './PublishItem'
 
 export default class PublishList extends React.Component {
-  componentDidMount() {
-    console.warn('Publishes', this.itemsRef)
-  }
+  static contextType = Context
 
   state = {
-    activeIndex: -1,
-    pageY: null
+    activeIndex: -1
   }
 
   constructor(props) {
@@ -21,25 +20,28 @@ export default class PublishList extends React.Component {
   handleMouseMove = (e) => {
     let activeIndex = -1
 
-    const { pageX, pageY } = e
+    const { clientX, clientY } = e
+    const { scrollTop } = this.context
 
     const currentIndex = this.itemRefs.findIndex(ref => {
-      const { y, height } = ref.clientRect
+      const { offsetTop } = ref.rootRef.current
+      const { height } = ref.clientRect
 
-      return (pageY >= y) && pageY < (y + height)
+      const y = scrollTop + clientY
+
+      return (y >= offsetTop) && y < (offsetTop + height)
     })
 
     if (currentIndex !== -1) {
       const ref = this.itemRefs[currentIndex]
 
-      if (pageX <= ref.state.checkoutBlockWidth) {
+      if (clientX <= ref.state.checkoutBlockWidth) {
         activeIndex = currentIndex
       }
     }
 
     this.setState({
-      activeIndex,
-      pageY
+      activeIndex
     })
   }
 

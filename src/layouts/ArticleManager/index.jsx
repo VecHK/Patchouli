@@ -10,13 +10,22 @@ import Loading from 'components/Loading'
 import CategoryHeader from 'components/CategoryHeader'
 import PublishList from 'components/PublishList'
 
+import Context from './context'
+
 @observer
 class ArticleManager extends Component {
   state = {
     firstLoaded: false,
     firstLoading: false,
     firstLoadingError: null,
-    page: 1
+    page: 1,
+    scrollTop: 0
+  }
+
+  constructor(props) {
+    super(props)
+
+    this.managerRef = React.createRef()
   }
 
   handleClickLogout = () => {
@@ -83,6 +92,26 @@ class ArticleManager extends Component {
     }
   }
 
+  refreshScrollTop = () => {
+    const { current } = this.managerRef
+    if (!current) {
+      return
+    }
+
+    this.setState({
+      ctx: 'hhh',
+      scrollTop: current.scrollTop
+    })
+  }
+
+  componentDidMount() {
+    this.refreshScrollTop()
+  }
+
+  getContext = () => ({
+    scrollTop: this.state.scrollTop
+  })
+
   render() {
     const { firstLoaded, firstLoading, firstLoadingError } = this.state
 
@@ -94,13 +123,19 @@ class ArticleManager extends Component {
     }
 
     return <div className={ `article-manager-wrapper ${ this.props.transitionState }` }>
-      <div className="article-manager">
+      <div
+        ref={this.managerRef}
+        className="article-manager"
+        onScroll={ this.refreshScrollTop }
+      >
         {
           do {
             if (firstLoaded) {
               return <div>
-                <CategoryHeader categories={ store.categories } />
-                <PublishList list={ this.props.store.publishList }></PublishList>
+                <Context.Provider value={ this.getContext() }>
+                  <CategoryHeader categories={ store.categories } />
+                  <PublishList list={ this.props.store.publishList } />
+                </Context.Provider>
               </div>
             }
 
