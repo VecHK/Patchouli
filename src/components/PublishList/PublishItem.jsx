@@ -182,11 +182,11 @@ export default class PublishItem extends React.Component {
             if (!isDrag) {
               return ''
             }
-            return `translateX(${diffX}px)`
+            return `translateX(${diffX}px) translateX(${CheckoutBlockStyle.displayPillarOffset})`
           }
         }}
       >
-        <div className="publish-item" style={{ 'borderColor': pub.fusion_color }} >
+        <div className="publish-item">
           <div className="title">
             <span>{pub.title}</span>
           </div>
@@ -203,9 +203,10 @@ export default class PublishItem extends React.Component {
         </div>
 
         <CheckoutBlock
-          onGetClientRect={rect => {
+          openSide={ openSide }
+          onUpdateWidth={checkoutBlockWidth => {
             this.setState({
-              checkoutBlockWidth: rect.width
+              checkoutBlockWidth
             })
           }}
         />
@@ -230,7 +231,7 @@ export default class PublishItem extends React.Component {
         .publish-item-slider {
           position: relative;
 
-          transform: translateX(0px);
+          transform: translateX(${CheckoutBlockStyle.displayPillarOffset});
         }
 
         .publish-item-wrapper:not(.is-touch) .publish-item-slider {
@@ -242,12 +243,14 @@ export default class PublishItem extends React.Component {
         }
 
         .publish-item {
+          box-sizing: border-box;
           padding: 1.25em 0;
+          padding-right: calc(${CheckoutBlockStyle.displayPillarOffset} / 2);
           text-align: center;
           flex-grow: 2;
 
-          border-left: solid 5px;
-          padding-right: 5px;
+          /* border-left: solid 5px; */
+          /* padding-right: 5px; */
           background-color: white;
         }
 

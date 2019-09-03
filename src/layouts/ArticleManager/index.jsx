@@ -189,6 +189,7 @@ class ArticleManager extends Component {
           height: 100%;
 
           overflow-y: scroll;
+          overflow-x: hidden;
 
           animation-fill-mode: forwards;
           animation-timing-function: ease-out;

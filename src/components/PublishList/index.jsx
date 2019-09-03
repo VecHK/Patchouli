@@ -8,7 +8,7 @@ export default class PublishList extends React.Component {
   static contextType = Context
 
   state = {
-    activeIndex: -1
+    activeIndex: 0
   }
 
   constructor(props) {

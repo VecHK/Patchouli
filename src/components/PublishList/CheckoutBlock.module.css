@@ -1,5 +1,11 @@
-@value width: 100px;
+@value blockWidth: 100px;
+@value categoryPillarWidth: 12px;
+@value displayPillarOffset: 5px;
+@value width: 112px;
 
 .ContainerWidth {
+  blockWidth: blockWidth;
+  categoryPillarWidth: categoryPillarWidth;
+  displayPillarOffset: displayPillarOffset;
   width: width;
 }
