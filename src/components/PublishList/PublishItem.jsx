@@ -1,7 +1,8 @@
 import React from 'react'
 
-import CheckoutBlockStyle from './CheckoutBlock.module.css'
-import CheckoutBlock from './CheckoutBlock'
+import BelowCheckoutBlockStyle from './BelowCheckoutBlock.module.css'
+import BelowCheckoutBlock from './BelowCheckoutBlock'
+import SideCategoryPillar from './SideCategoryPillar'
 
 function formatTime(jsonDate) {
   const date = new Date(jsonDate)
@@ -175,6 +176,15 @@ export default class PublishItem extends React.Component {
         return { borderColor: `rgba(208, 208, 208, ${rangePercent})` }
       })()}
     >
+      <BelowCheckoutBlock
+        openSide={ openSide }
+        onUpdateWidth={checkoutBlockWidth => {
+          this.setState({
+            checkoutBlockWidth
+          })
+        }}
+      />
+
       <div
         className="publish-item-slider"
         style={{
@@ -182,7 +192,7 @@ export default class PublishItem extends React.Component {
             if (!isDrag) {
               return ''
             }
-            return `translateX(${diffX}px) translateX(${CheckoutBlockStyle.displayPillarOffset})`
+            return `translateX(${diffX}px) translateX(${BelowCheckoutBlockStyle.displayPillarOffset})`
           }
         }}
       >
@@ -200,16 +210,11 @@ export default class PublishItem extends React.Component {
           </ul>
 
           <time className="time">{formatTime(pub.date)}</time>
-        </div>
 
-        <CheckoutBlock
-          openSide={ openSide }
-          onUpdateWidth={checkoutBlockWidth => {
-            this.setState({
-              checkoutBlockWidth
-            })
-          }}
-        />
+          <SideCategoryPillar
+            fusionColor={pub.fusion_color}
+          />
+        </div>
       </div>
 
       <style jsx>{`
@@ -222,6 +227,7 @@ export default class PublishItem extends React.Component {
           border-top: solid 1px white;
           border-bottom: solid 1px white;
           background-color: rgb(232,232,232);
+          position: relative;
         }
 
         .publish-item-wrapper.open {
@@ -231,7 +237,7 @@ export default class PublishItem extends React.Component {
         .publish-item-slider {
           position: relative;
 
-          transform: translateX(${CheckoutBlockStyle.displayPillarOffset});
+          transform: translateX(${BelowCheckoutBlockStyle.displayPillarOffset});
         }
 
         .publish-item-wrapper:not(.is-touch) .publish-item-slider {
@@ -239,18 +245,17 @@ export default class PublishItem extends React.Component {
         }
 
         .publish-item-wrapper.open .publish-item-slider {
-          transform: translateX(${CheckoutBlockStyle.width});
+          transform: translateX(${checkoutBlockWidth}px);
         }
 
         .publish-item {
           box-sizing: border-box;
           padding: 1.25em 0;
-          padding-right: calc(${CheckoutBlockStyle.displayPillarOffset} / 2);
+          width: calc(100% - ${BelowCheckoutBlockStyle.displayPillarOffset} / 2);
+          padding-right: calc(${BelowCheckoutBlockStyle.displayPillarOffset} / 2);
           text-align: center;
           flex-grow: 2;
 
-          /* border-left: solid 5px; */
-          /* padding-right: 5px; */
           background-color: white;
         }
 
